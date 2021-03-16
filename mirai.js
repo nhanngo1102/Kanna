@@ -196,65 +196,35 @@ catch (e) {
 	return logger("Đã xảy ra lỗi trong khi lấy appstate đăng nhập, lỗi: " + e, "error");
 }
 
-function onBot({ models }) {	
-	login({ appState: require(appStateFile) }, (err, api) => {
-		if (err) return logger(JSON.stringify(err), "error");
-		const handleListen = require("./includes/listen")({ api, models, client, __GLOBAL, timeStart });
+login({ appState: require(appStateFile) }, (err, api) => {
+	if (err) return logger(JSON.stringify(err), "error");
+	const handleListen = require("./includes/listen")({ api, client, __GLOBAL, timeStart });
 
-		api.setOptions({
-			forceLogin: true,
-			listenEvents: true,
-			logLevel: "silent",
-			selfListen: false,
-			userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36"
-		});
-		writeFileSync(appStateFile, JSON.stringify(api.getAppState(), null, "\t"));
-
-		try {
-			api.listenMqtt(handleListen);
-			setInterval(() => {
-				api.listenMqtt().stopListening();
-				setTimeout(() => api.listenMqtt(handleListen), 2000);
-				if (__GLOBAL.settings.DeveloperMode == true) {
-					const moment = require("moment");
-					var time = moment.tz("Asia/Ho_Chi_minh").format("HH:MM:ss L");
-					logger(`[ ${time} ] Listen restarted`, "[ DEV MODE ]");
-				}
-			}, 1800000);
-		}
-		catch(e) {
-			logger(`${e.name}: ${e.message}`, "[ LISTEN ]")
-		}
+	api.setOptions({
+		forceLogin: true,
+		listenEvents: true,
+		logLevel: "silent",
+		selfListen: false,
+		userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36"
 	});
-}
-
-const { Sequelize, sequelize } = require("./includes/database");
-
-(async () => {
-	var migrations = readdirSync(`./includes/database/migrations`);
-	var completedMigrations = await sequelize.query("SELECT * FROM `SequelizeMeta`", { type: Sequelize.QueryTypes.SELECT });
-	for (const name in completedMigrations) {
-		if (completedMigrations.hasOwnProperty(name)) {
-			const index = migrations.indexOf(completedMigrations[name].name);
-			if (index !== -1) migrations.splice(index, 1);
-		}
-	}
-
-	for (const migration of migrations) {
-		var migrationRequire = require(`./includes/database/migrations/` + migration);
-		migrationRequire.up(sequelize.queryInterface, Sequelize);
-		await sequelize.query("INSERT INTO `SequelizeMeta` VALUES(:name)", { type: Sequelize.QueryTypes.INSERT, replacements: { name: migration } });
-	}
+	writeFileSync(appStateFile, JSON.stringify(api.getAppState(), null, "\t"));
 
 	try {
-		await sequelize.authenticate();
-		logger("Kết nối cơ sở dữ liệu thành công", "[ DATABASE ]")
-		const models = require("./includes/database/model");
-		onBot({ models });
+		api.listenMqtt(handleListen);
+		setInterval(() => {
+			api.listenMqtt().stopListening();
+			setTimeout(() => api.listenMqtt(handleListen), 2000);
+			if (__GLOBAL.settings.DeveloperMode == true) {
+				const moment = require("moment");
+				var time = moment.tz("Asia/Ho_Chi_minh").format("HH:MM:ss L");
+				logger(`[ ${time} ] Listen restarted`, "[ DEV MODE ]");
+			}
+		}, 1800000);
 	}
-	catch (error) {
-		() => logger(`Kết nối cơ sở dữ liệu thất bại, Lỗi: ${error.name}: ${error.message}`, "[ DATABASE ]");
+	catch(e) {
+		logger(`${e.name}: ${e.message}`, "[ LISTEN ]")
 	}
-})();
+});
+
 
 //THIZ BOT WAS MADE BY ME(CATALIZCS) AND MY BROTHER SPERMLORD - DO NOT STEAL MY CODE (つ ͡ ° ͜ʖ ͡° )つ ✄ ╰⋃╯

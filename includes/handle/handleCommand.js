@@ -1,4 +1,4 @@
-module.exports = function({ api, __GLOBAL, client, models, Users, Threads, Currencies, utils }) {
+module.exports = function({ api, __GLOBAL, client, utils }) {
 	const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 	const logger = require("../../utils/log.js");
 	const stringSimilarity = require('string-similarity');
@@ -7,9 +7,7 @@ module.exports = function({ api, __GLOBAL, client, models, Users, Threads, Curre
 		let { body: contentMessage, senderID, threadID, messageID } = event;
 		senderID = parseInt(senderID);
 		threadID = parseInt(threadID);
-		if (client.userBanned.has(senderID) || client.threadBanned.has(threadID) || __GLOBAL.settings.allowInbox == false && senderID == threadID) return;
-		var threadSetting = client.threadSetting.get(threadID) || {};
-		var prefixRegex = new RegExp(`^(<@!?${senderID}>|${escapeRegex((threadSetting.hasOwnProperty("PREFIX")) ? threadSetting.PREFIX : __GLOBAL.settings.PREFIX )})\\s*`);
+		var prefixRegex = new RegExp(`^(<@!?${senderID}>|${escapeRegex(__GLOBAL.settings.PREFIX )})\\s*`);
 		if (!prefixRegex.test(contentMessage)) return;
 
 		//=========Get command user use=========//
@@ -32,10 +30,6 @@ module.exports = function({ api, __GLOBAL, client, models, Users, Threads, Curre
 		var permssion;
 		if (command.config.hasPermssion == 2 && !__GLOBAL.settings.ADMINBOT.includes(senderID)) return api.sendMessage(`❌ Bạn không đủ quyền hạn người điều hành bot đề sử dụng lệnh ${command.config.name}`, threadID, messageID);
 		else permssion = 2;
-		const threadInfo = await (Threads.getData(threadID).threadInfo || Threads.getInfo(threadID));
-		const find = threadInfo.adminIDs.find(el => el.id == senderID);
-		if (command.config.hasPermssion == 1 && !__GLOBAL.settings.ADMINBOT.includes(senderID) && !find) return api.sendMessage(`❌ Bạn không đủ quyền hạn đề sử dụng lệnh ${command.config.name}`, threadID, messageID);
-		else permssion = 1;
 
 		//=========Check cooldown=========//
 
@@ -52,7 +46,7 @@ module.exports = function({ api, __GLOBAL, client, models, Users, Threads, Curre
 
 		//========= Run command =========//
 		try {
-			command.run({ api, __GLOBAL, client, event, args, models, Users, Threads, Currencies, utils, permssion });
+			command.run({ api, __GLOBAL, client, event, args, utils, permssion });
 		}
 		catch (error) {
 			logger(error + " tại lệnh: " + command.config.name, "error");

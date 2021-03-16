@@ -32,7 +32,6 @@
 	"dependencies": {
 		"axios": "",
 		"body-parser": "",
-		"canvas": "",
 		"chalk": "",
 		"child_process": "",
 		"fca-unofficial": "",
@@ -44,8 +43,6 @@
 		"npmlog": "",
 		"readline": "",
 		"semver": "",
-		"sequelize": "^6.5.0",
-		"sqlite3": "",
 		"string-similarity": "",
 		"totp-generator": ""
 	}
