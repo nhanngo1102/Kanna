@@ -17,7 +17,7 @@ module.exports = function({ api, client, __GLOBAL, timeStart }) {
 
 	return (error, event) => {
 		try	{
-			if (error) throw new Error(event.error);
+			if (error) throw new Error(error.error);
 			if (client.messageID && client.messageID == event.messageID || ["presence","typ","read_receipt"].some(typeFilter => typeFilter == event.type)) "";
 			else {
 				client.messageID = event.messageID;
